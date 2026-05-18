@@ -1,6 +1,6 @@
 use alloc::vec::Vec;
 use alloc::string::{String, ToString};
-use alloy_primitives::{B256, Keccak256};
+use alloy_primitives::{B256, utils::Keccak256};
 use core::marker::PhantomData;
 /// A generic commitment scheme interface for PQ commitment schemes.
 pub trait CommitmentScheme {
@@ -319,7 +319,9 @@ impl<P: LatticeParameterSet> CommitmentScheme for LatticeCommitmentScheme<P> {
     }
 }
 
-pub type NistLatticeScheme = LatticeCommitmentScheme<Kyber768Params>;
+/// Default lattice commitment profile (Kyber-*-style parameters n, q, η). Matches ML-KEM-1024 naming / NIST Level 5.
+/// Browser WASM uses `NistSisScheme` instead; this alias is for lattice-mode trees.
+pub type NistLatticeScheme = LatticeCommitmentScheme<Kyber1024Params>;
 
 const LATTICE_SEED: &[u8] = b"nist-lattice-vc-v1";
 
@@ -581,7 +583,16 @@ impl<P: WeeWuSisParams> CommitmentScheme for WeeWuSisCommitmentScheme<P> {
         if proof.iter().any(|opening| opening.aux.as_deref() != aux) {
             return false;
         }
-        let expected_commitment = sis_commit_vector::<P>(values, aux);
+        // `commit_with_aux` uses a single-value commitment when len == 1, but `open_multi` always
+        // uses vector-style opening material. Match the commitment branch so `create_multi_proof` /
+        // `verify_multi_proof` agree for batch size 1.
+        let expected_commitment = if values.len() == 1 {
+            let value = values[0].as_slice();
+            let (s, e) = sis_opening::<P>(value, aux);
+            sis_commit::<P>(&s, &e)
+        } else {
+            sis_commit_vector::<P>(values, aux)
+        };
         if &expected_commitment != commitment {
             return false;
         }

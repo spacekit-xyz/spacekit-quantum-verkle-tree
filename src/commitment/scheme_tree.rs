@@ -1,5 +1,5 @@
 use alloc::vec::Vec;
-use alloy_primitives::{Address, B256, U256, Keccak256};
+use alloy_primitives::{Address, B256, U256, utils::Keccak256};
 use hashbrown::HashMap;
 use foldhash::fast::RandomState;
 use core::cmp::Ordering;

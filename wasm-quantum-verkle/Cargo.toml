@@ -9,5 +9,5 @@ crate-type = ["cdylib"]
 [dependencies]
 wasm-bindgen = "0.2.108"
 js-sys = "0.3.64"
-spacekit-quantum-verkle = { path = ".." }
-alloy-primitives = "0.8.8"
+spacekit-quantum-verkle = { path = "..", package = "spacekit-quantum-verkle-tree" }
+alloy-primitives = "1.0"

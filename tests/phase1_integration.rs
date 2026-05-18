@@ -53,6 +53,29 @@ fn range_proof_round_trip() {
 }
 
 #[test]
+fn multi_proof_single_leaf_round_trip() {
+    let mut tree = QuantumTree::<NistSisScheme>::new();
+    tree.set(&addr(1), &key(1), U256::from(42u64));
+
+    let keys = vec![(addr(1), key(1))];
+    let proof = tree.create_multi_proof(keys.clone()).unwrap();
+    let values = vec![U256::from(42u64)];
+    assert!(tree.verify_multi_proof(&proof, keys, values));
+}
+
+#[test]
+fn multi_proof_serialization_single_leaf() {
+    let mut tree = QuantumTree::<NistSisScheme>::new();
+    tree.set(&addr(7), &key(7), U256::from(99u64));
+    let keys = vec![(addr(7), key(7))];
+    let proof = tree.create_multi_proof(keys.clone()).unwrap();
+    let bytes = proof.to_bytes::<NistSisScheme>();
+    let decoded = QuantumMultiProof::<Vec<SisOpening>>::from_bytes::<NistSisScheme>(&bytes).unwrap();
+    let values = vec![U256::from(99u64)];
+    assert!(tree.verify_multi_proof(&decoded, keys, values));
+}
+
+#[test]
 fn multi_proof_round_trip() {
     let mut tree = QuantumTree::<NistSisScheme>::new();
     tree.set(&addr(1), &key(1), U256::from(7u64));
